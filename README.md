@@ -1,6 +1,7 @@
 # srcdsLogParser
 
 this is log parser at JavaScript for valve`s officials server (srcds) : CS:GO, HL2, DOD:S, CS:S and etc
+it free, use it if you need it -)
 
 ### who to use
 
