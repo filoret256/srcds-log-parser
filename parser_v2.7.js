@@ -1,71 +1,81 @@
 let fs = require('fs');
+let result = '';
+let outResult={}; 
 
 function teamNameFn(line){
   
-  return new Promise(function(resolve,reject){
-    let result = line.match(/^Team playing ["](.+)["]: (.+)$/i);
+  return new Promise( (resolve,reject) => {
 
-      if (result) {
-      let outResult={};        
+    result = line.match(/^Team playing ["](.+)["]: (.+)$/i);
 
-        outResult.event ='teamName';
-        outResult.team = result[1];
-        outResult.teamName = result[2];
+    if (result === '' && result=== null) return resolve(undefined);
+    
+    outResult={};
 
-        return resolve(outResult);
-       } else {
-       return resolve(undefined);
-       };
+    outResult.event ='teamName';
+    outResult.team = result[1];
+    outResult.teamName = result[2];
+        
+    return resolve(outResult);
+ 
   });
+
 };
 
 function attakedFn(line){
   
-  return new Promise(function(resolve,reject){
-    let result = line.match(/^["](.+)["] \[(.+) (.+) (.+)\] attacked ["](.+)["] \[(.+) (.+) (.+)\] with ["](.+)["] [(]damage ["](.+)["][)] [(]damage_armor ["](.+)["][)] [(]health ["](.+)["][)] [(]armor ["](.+)["][)] [(]hitgroup ["](.+)["][)]$/i);
+  return new Promise( (resolve,reject) => {
+    
+    result = line.match(/^["](.+)["] \[(.+) (.+) (.+)\] attacked ["](.+)["] \[(.+) (.+) (.+)\] with ["](.+)["] [(]damage ["](.+)["][)] [(]damage_armor ["](.+)["][)] [(]health ["](.+)["][)] [(]armor ["](.+)["][)] [(]hitgroup ["](.+)["][)]$/i);
+    
+    if (result === '' && result=== null) return resolve(undefined);
 
-      if (result) {
-      let outResult={};        
-        outResult.event='attacked';
-        outResult.playerA = parsePlayer(result[1]);
-        outResult.playerB = parsePlayer(result[5]);
-        outResult.playerA.position=[parseInt(result[2],10),parseInt(result[3],10),parseInt(result[4],10)];
-        outResult.playerB.position=[parseInt(result[6],10),parseInt(result[7],10),parseInt(result[8],10)];
-        outResult.weapon = result[9];
-        outResult.damage = parseInt(result[10],10);
-        outResult.damage_armor = parseInt(result[11],10);
-        outResult.health = parseInt(result[12],10);
-        outResult.armor = parseInt(result[13],10);
-        outResult.hitgroup = result[14];
-        return resolve(outResult);
-       } else {
-       return resolve(undefined);
-       };
+    outResult={};
+
+    outResult.event='attacked';
+    outResult.playerA = parsePlayer(result[1]);
+    outResult.playerB = parsePlayer(result[5]);
+    outResult.playerA.position=[parseInt(result[2],10),parseInt(result[3],10),parseInt(result[4],10)];
+    outResult.playerB.position=[parseInt(result[6],10),parseInt(result[7],10),parseInt(result[8],10)];
+    outResult.weapon = result[9];
+    outResult.damage = parseInt(result[10],10);
+    outResult.damage_armor = parseInt(result[11],10);
+    outResult.health = parseInt(result[12],10);
+    outResult.armor = parseInt(result[13],10);
+    outResult.hitgroup = result[14];
+
+    return resolve(outResult);
+ 
   });
+
 };
 
 function killedHsFn(line){
   
-  return new Promise(function(resolve,reject){
-      let result = line.match(/^["](.+)["] \[(.+) (.+) (.+)\] killed ["](.+)["] \[(.+) (.+) (.+)\] with ["](.+)["] (\(headshot\))$/i);
+  return new Promise( (resolve,reject) => {
+    
+    result = line.match(/^["](.+)["] \[(.+) (.+) (.+)\] killed ["](.+)["] \[(.+) (.+) (.+)\] with ["](.+)["] (\(headshot\))$/i);
 
-     if (result) {
+    if (result === '' && result=== null) return resolve(undefined);
 
-      let outResult={};
-      outResult.event='killed';
-      outResult.playerA=parsePlayer(result[1]);
-      outResult.playerB=parsePlayer(result[5]);
-      outResult.weapon=result[8];
-      outResult.playerA.position=[parseInt(result[2],10),parseInt(result[3],10),parseInt(result[4],10)];
-      outResult.playerB.position=[parseInt(result[6],10),parseInt(result[7],10),parseInt(result[8],10)];
-      outResult.headshot = true;
-      outResult.penetrated = false;
-      return resolve(outResult);
-     } else {
-      return resolve(undefined);
-     };
+    outResult={};
+
+    outResult.event='killed';
+    outResult.playerA=parsePlayer(result[1]);
+    outResult.playerB=parsePlayer(result[5]);
+    outResult.weapon=result[8];
+    outResult.playerA.position=[parseInt(result[2],10),parseInt(result[3],10),parseInt(result[4],10)];
+    outResult.playerB.position=[parseInt(result[6],10),parseInt(result[7],10),parseInt(result[8],10)];
+    outResult.headshot = true;
+    outResult.penetrated = false;
+
+      
+    return resolve(outResult);
+ 
   });
+
 };
+
 function killedPenHsFn(line){
   
   return new Promise(function(resolve,reject){
