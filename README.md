@@ -1,32 +1,170 @@
-# srcdsLogParser
+# Парсер логов игрового сервера на Go
 
-this is log parser at JavaScript for valve`s officials server (srcds) : CS:GO, HL2, DOD:S, CS:S and etc
-it free, use it if you need it -)
+Этот проект представляет собой HTTP-сервер на языке Go для парсинга строк логов игрового сервера Counter-Strike (или аналогичных игр, использующих схожий формат логов). Сервер принимает массив строк лога в формате JSON по HTTP POST запросам и возвращает массив распарсенных событий в формате JSON.
 
-### who to use
+## Требования
 
-1. download **parser_v2.7.js**
-2. add to your project like
-  
-  > const parser = require('./parser_v2.7.js')
-  
-and that is it
+Для сборки и запуска проекта вам потребуется:
 
-it will return promise object, use it like that
+*   Установленный Go (версии 1.16 или выше).
 
->    parser( line-to-parse )
->        .then( msg => { ... })
-  
- object will contains 
- event: ...
- eventTime: ...
- player {
-  name: ...
-  id: ...
-  steamID: ...
- }
- 
- and etc
- 
- ### TO-DO
- more desctiption and get it to NPM :)
+## Сборка и Запуск
+
+1.  Сохраните код парсера в файл `parser.go` в вашем рабочем каталоге.
+2.  Откройте терминал и перейдите в каталог, где вы сохранили файл `parser.go`.
+3.  Соберите исполняемый файл:
+
+    ```bash
+    go build parser.go
+    ```
+
+    Это создаст исполняемый файл с именем `parser` (или `parser.exe` в Windows) в текущем каталоге.
+
+4.  Запустите сервер:
+
+    ```bash
+    ./parser
+    ```
+    или для Windows:
+    ```bash
+    parser.exe
+    ```
+
+    Сервер запустится и начнет слушать входящие соединения на порту `5000`. Вы увидите сообщение в консоли: `Сервер парсера запущен и слушает на порту 5000...`.
+
+## Использование
+
+Сервер принимает POST-запросы на эндпоинт `/parse`. Тело запроса должно быть JSON-массивом строк лога.
+
+**Пример запроса с использованием `curl`:**
+
+Предположим, у вас есть файл `logs.json` со следующим содержимым (JSON массив строк):
+
+```json
+[
+  "L 01/01/2023 - 12:00:01: \"Player Name<123><STEAM_1:1:12345><Team>\" connected, address \"192.168.1.1:27005\"",
+  "L 01/01/2023 - 12:00:05: \"Player Name<123><STEAM_1:1:12345><Team>\" entered the game",
+  "L 01/01/2023 - 12:01:10: \"Player Name<123><STEAM_1:1:12345><Team>\" say \"hello world\"",
+  "L 01/01/2023 - 12:05:30: \"Attacker<1><STEAM_1:1:11111><TeamA>\" [1 2 3] killed \"Victim<2><STEAM_1:1:22222><TeamB>\" [4 5 6] with \"ak47\" (headshot)",
+  "Some unparsable line here"
+]
+```
+
+Вы можете отправить этот файл на сервер следующим образом:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d @logs.json http://localhost:5000/parse
+```
+
+Сервер обработает строки и вернет ответ в формате JSON.
+
+## Структура ответа
+
+Сервер возвращает JSON-массив объектов, где каждый объект представляет распарсенное событие. Структура объектов зависит от типа события, но каждое успешно распарсенное событие будет включать поля `event` (тип события) и `date` (временная метка парсинга).
+
+**Пример успешного ответа:**
+
+```json
+[
+  {
+    "event": "connected",
+    "date": {
+      "year": 2023,
+      "month": 1,
+      "day": 1,
+      "hour": 12,
+      "minutes": 0,
+      "seconds": 1,
+      "ts": 1672576801000,
+      "fulldate": "2023-01-01T12:00:01Z"
+    },
+    "player": {
+      "name": "Player Name",
+      "id": 123,
+      "steamid": "STEAM_1:1:12345",
+      "team": "Team"
+    },
+    "adress": "192.168.1.1:27005"
+  },
+  {
+    "event": "entered",
+    "date": {
+      "year": 2023,
+      "month": 1,
+      "day": 1,
+      "hour": 12,
+      "minutes": 0,
+      "seconds": 5,
+      "ts": 1672576805000,
+      "fulldate": "2023-01-01T12:00:05Z"
+    },
+    "player": {
+      "name": "Player Name",
+      "id": 123,
+      "steamid": "STEAM_1:1:12345",
+      "team": "Team"
+    }
+  },
+  {
+    "event": "say",
+    "date": {
+      "year": 2023,
+      "month": 1,
+      "day": 1,
+      "hour": 12,
+      "minutes": 1,
+      "seconds": 10,
+      "ts": 1672576870000,
+      "fulldate": "2023-01-01T12:01:10Z"
+    },
+    "player": {
+      "name": "Player Name",
+      "id": 123,
+      "steamid": "STEAM_1:1:12345",
+      "team": "Team"
+    },
+    "text": "hello world"
+  },
+  {
+    "event": "killed",
+    "date": {
+      "year": 2023,
+      "month": 1,
+      "day": 1,
+      "hour": 12,
+      "minutes": 5,
+      "seconds": 30,
+      "ts": 1672577130000,
+      "fulldate": "2023-01-01T12:05:30Z"
+    },
+    "playerA": {
+      "name": "Attacker",
+      "id": 1,
+      "steamid": "STEAM_1:1:11111",
+      "team": "TeamA",
+      "position": [1, 2, 3]
+    },
+    "playerB": {
+      "name": "Victim",
+      "id": 2,
+      "steamid": "STEAM_1:1:22222",
+      "team": "TeamB",
+      "position": [4, 5, 6]
+    },
+    "weapon": "ak47",
+    "headshot": true,
+    "penetrated": false
+  }
+]
+```
+
+Строки, которые не удалось распарсить или которые совпали с несколькими шаблонами, не будут включены в массив ответа, но будут logged (выведены) в стандартный вывод ошибок (stderr) сервера.
+
+## Обработка ошибок
+
+Сервер обрабатывает следующие ошибки:
+
+*   **Неправильный метод HTTP:** Возвращает `405 Method Not Allowed` для методов, отличных от POST.
+*   **Ошибка чтения тела запроса:** Возвращает `500 Internal Server Error`.
+*   **Некорректный формат JSON в теле запроса:** Возвращает `400 Bad Request`.
+*   **Ошибки парсинга строк лога:** Логируются на стороне сервера.
